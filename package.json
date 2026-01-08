@@ -1,0 +1,26 @@
+{
+  "name": "gasless-smart-wallet",
+  "version": "1.0.0",
+  "description": "User (EOA/Keypair)        |        v   [Signs Intent]        |        v    Relayer (Off-chain Service)        |        v   [Submits Transaction with Gas]        |        v Smart Contract Wallet (On-chain)        |        v   [Verifies Signature & Nonce]        |        v   [Executes Target Action]",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlowStablee/account-core.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FlowStablee/account-core/issues"
+  },
+  "homepage": "https://github.com/FlowStablee/account-core#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "hardhat": "^3.1.2"
+  }
+}
