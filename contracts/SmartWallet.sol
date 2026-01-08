@@ -35,27 +35,61 @@ contract SmartWallet is Ownable {
         bytes calldata data,
         uint256 _nonce,
         bytes calldata signature
-    ) external payable { // Relayer pays gas here
+    ) external payable {
+        _executeInner(target, value, data, _nonce, signature);
+    }
+
+    function executeBatch(
+        address[] calldata targets,
+        uint256[] calldata values,
+        bytes[] calldata datas,
+        uint256 _nonce,
+        bytes calldata signature
+    ) external payable {
         require(_nonce == nonce, "Invalid nonce");
-        
-        // 1. Construct the message hash
-        // We include chainId and address(this) to prevent replay across chains or other wallets
+        require(targets.length == values.length && values.length == datas.length, "Length mismatch");
+
+        // 1. Construct the message hash for batch
         bytes32 structHash = keccak256(
-            abi.encodePacked(block.chainid, address(this), target, value, data, _nonce)
+            abi.encodePacked(block.chainid, address(this), targets, values, datas, _nonce)
         );
-        
+
         // 2. Verify signature
-        // The user signs the hash of the data. 
-        // using version with Ethereum Signed Message prefix to be safe
         bytes32 ethSignedMessageHash = structHash.toEthSignedMessageHash();
-        
         address signer = ethSignedMessageHash.recover(signature);
         require(signer == owner(), "Invalid signature");
 
         // 3. Increment Nonce
         nonce++;
 
-        // 4. Execute
+        // 4. Execute all
+        for (uint256 i = 0; i < targets.length; i++) {
+            (bool success, ) = targets[i].call{value: values[i]}(datas[i]);
+            require(success, "Batch execution failed");
+            emit Executed(targets[i], values[i], datas[i]);
+        }
+    }
+
+    function _executeInner(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        uint256 _nonce,
+        bytes calldata signature
+    ) internal {
+        require(_nonce == nonce, "Invalid nonce");
+        
+        bytes32 structHash = keccak256(
+            abi.encodePacked(block.chainid, address(this), target, value, data, _nonce)
+        );
+        
+        bytes32 ethSignedMessageHash = structHash.toEthSignedMessageHash();
+        
+        address signer = ethSignedMessageHash.recover(signature);
+        require(signer == owner(), "Invalid signature");
+
+        nonce++;
+
         (bool success, ) = target.call{value: value}(data);
         require(success, "Execution failed");
 
